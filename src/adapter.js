@@ -43,7 +43,6 @@ class MyPromise {
             }
             handlerCalled = true;
             tryResolve(v);
-            //setValue(value, 'resolved');
           }
     
           const onRejected = (r) => {
@@ -125,7 +124,6 @@ class MyPromise {
     if (this.state !== 'pending') {
       this.thenCallbacks.forEach(({ onFulfilled, onRejected, nextPHandlers }) => {
         setImmediate(() => {
-          debugger;
           if (this.state === 'rejected') {
             if (typeof onRejected === 'function') {
               try {
