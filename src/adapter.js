@@ -124,38 +124,25 @@ class MyPromise {
     if (this.state !== 'pending') {
       this.thenCallbacks.forEach(({ onFulfilled, onRejected, nextPHandlers }) => {
         setImmediate(() => {
-          if (this.state === 'rejected') {
-            if (typeof onRejected === 'function') {
-              try {
-                const rejectedValue = onRejected(this.value);
-                if (rejectedValue === this || rejectedValue === nextPHandlers.nextP) {
-                  throw new TypeError('Circular promise detected');
-                }
-                nextPHandlers.resolve(rejectedValue);
-                return;
-              } catch (ex) {
-                nextPHandlers.reject(ex);
-                return;
-              }
-            }
+          const callback = this.state === 'rejected' ? onRejected : onFulfilled;
 
-            nextPHandlers.reject(this.value);
-          } else if (this.state === 'resolved') {
-            if (typeof onFulfilled === 'function') {
-              try {
-                const fulfiledResult = onFulfilled(this.value);
-                if (fulfiledResult === this || fulfiledResult === nextPHandlers.nextP) {
-                  throw new TypeError('Circular promise detected');
-                }
-                nextPHandlers.resolve(fulfiledResult);
-                return;
-              } catch (ex) {
-                nextPHandlers.reject(ex);
-                return;
+          if (typeof callback === 'function') {
+            try {
+              const callbackValue = callback(this.value);
+              if (callbackValue === this || callbackValue === nextPHandlers.nextP) {
+                throw new TypeError('Circular promise detected');
               }
-            }
 
-            nextPHandlers.resolve(this.value);
+              nextPHandlers.resolve(callbackValue);
+            } catch (ex) {
+              nextPHandlers.reject(ex);
+            }
+          } else {
+            if (this.state === 'resolved') {
+              nextPHandlers.resolve(this.value);
+            } else {
+              nextPHandlers.reject(this.value);
+            }
           }
         });
       });
